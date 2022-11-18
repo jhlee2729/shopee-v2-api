@@ -1,1 +1,1 @@
-# shopee-api-v2
+# shopee-v2-api
