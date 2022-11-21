@@ -27,6 +27,7 @@ const insertData = {
     updateOrder: [],
     updateOrderDetails: [],
     updateMore: false,
+    updateTracking: []
 }
 
 const execute = (sql,callback,data = {})=>{
@@ -296,7 +297,6 @@ const updateOrderDetailsTake = () => {
             }).then((response)=>{
                 insertData.updateOrderDetails = insertData.updateOrderDetails.concat(response.data.response.order_list);
 
-                console.log(response.data.response.order_list)
                 callAPI();
             }).catch((err)=>{
                 console.log("updateOrderDetails ERR");
@@ -319,6 +319,61 @@ const updateOrderDetailsTake = () => {
 
         getOrderDetails(sindex,eindex);
     });
+}
+
+const updateTrackingNumber = () => {
+    return new Promise((resolve,reject) => {
+
+        let path = `/api/v2/logistics/get_tracking_number`
+        let timestamp = new Date().getTime();
+        let convert = Number((timestamp.toString()).substr(0, 10));
+        let sign_format = `${syncData.partner_id}${path}${convert}${syncData.access_token}${syncData.shop_id}`;
+        let sign = signature(sign_format);
+
+        let order_count = insertData.updateOrder.length;
+        let loop = 0;
+        
+        const getTracking = () => {
+
+            axios({
+
+                method : 'GET',
+                url : "https://partner.shopeemobile.com/api/v2/logistics/get_tracking_number",
+                params : {
+                    partner_id : syncData.partner_id,
+                    timestamp : convert,
+                    access_token : syncData.access_token,
+                    shop_id : syncData.shop_id,
+                    sign : sign,
+                    order_sn : insertData.updateOrder[loop].order_sn
+                }
+            })
+            .then((response)=>{
+                // console.log("order_sn", insertData.updateOrder[loop].order_sn);
+                // console.log("response TRACKING", response.data.response.tracking_number);
+
+                insertData.updateTracking = insertData.updateTracking.concat({'order_sn': insertData.updateOrder[loop].order_sn,'tracking_number': response.data.response.tracking_number});
+                // console.log("insertData.updateTracking",insertData.updateTracking)
+                loop++;
+                callAPI();
+            })
+            .catch((err)=>{
+                console.log("ERR")
+                console.log(err);
+            })
+        }
+
+        const callAPI = () => {
+
+            if ( order_count != loop ) {
+                getTracking();
+            } else {
+                resolve(true);
+            }
+        }
+
+        getTracking();
+    })
 }
 
 const createOrderDetailsBundle = () => {
@@ -869,6 +924,7 @@ const worker = async(sync,callback,bool) => {
         insertData.updateOrder = [];
         insertData.updateOrderDetails = [];
         insertData.updateMore = false;
+        insertData.updateTracking = [];
 
         syncData.market = sync.market;
         syncData.shop_id = sync.shop_id;
@@ -923,6 +979,14 @@ const worker = async(sync,callback,bool) => {
             c_count != 0 && await insertOrder();
             u_count != 0 && await editOrder();
         }
+        
+        await updateTrackingNumber();
+        insertData.updateTracking.filter((i) => {
+            if(i.tracking_number != ''){
+                console.log("주문번호", i.order_sn)
+                console.log("트래킹번호", i.tracking_number)
+            }
+        });
 
         await timeSave();
         // insertData.createOrder.length !=0 && await insertOrder();
