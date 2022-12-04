@@ -334,7 +334,7 @@ const updateTrackingNumber = () => {
         let loop = 0;
         
         const getTracking = () => {
-
+            // console.log("insertData.updateOrder[loop].order_sn", insertData.updateOrder[loop].order_sn)
             axios({
 
                 method : 'GET',
@@ -353,7 +353,7 @@ const updateTrackingNumber = () => {
                 // console.log("response TRACKING", response.data.response.tracking_number);
 
                 insertData.updateTracking = insertData.updateTracking.concat({'order_sn': insertData.updateOrder[loop].order_sn,'tracking_number': response.data.response.tracking_number});
-                // console.log("insertData.updateTracking",insertData.updateTracking)
+                console.log("insertData.updateTracking",insertData.updateTracking)
                 loop++;
                 callAPI();
             })
@@ -896,6 +896,56 @@ const timeSave = () => {
     });
 }
 
+const countSave = () => {
+    return new Promise((resolve,reject) => {
+        
+        execute(`INSERT INTO app_shopee_v2_count (
+                market,
+                TOTAL,
+                UNPAID,
+                READY_TO_SHIP,
+                RETRY_SHIP,
+                SHIPPED,
+                TO_CONFIRM_RECEIVE,
+                IN_CANCEL,
+                CANCELLED,
+                TO_RETURN,
+                COMPLETED
+            ) VALUES (
+                "${syncData.market}",
+                (SELECT COUNT(*) count FROM app_shopee_v2_order WHERE market="${syncData.market}"),
+                (SELECT COUNT(*) count FROM app_shopee_v2_order WHERE order_status="UNPAID" AND market="${syncData.market}"),
+                (SELECT COUNT(*) count FROM app_shopee_v2_order WHERE order_status="READY_TO_SHIP" AND market="${syncData.market}"),
+                (SELECT COUNT(*) count FROM app_shopee_v2_order WHERE order_status="RETRY_SHIP" AND market="${syncData.market}"),
+                (SELECT COUNT(*) count FROM app_shopee_v2_order WHERE order_status="SHIPPED" AND market="${syncData.market}"),
+                (SELECT COUNT(*) count FROM app_shopee_v2_order WHERE order_status="TO_CONFIRM_RECEIVE" AND market="${syncData.market}"),
+                (SELECT COUNT(*) count FROM app_shopee_v2_order WHERE order_status="IN_CANCEL" AND market="${syncData.market}"),
+                (SELECT COUNT(*) count FROM app_shopee_v2_order WHERE order_status="CANCELLED" AND market="${syncData.market}"),
+                (SELECT COUNT(*) count FROM app_shopee_v2_order WHERE order_status="TO_RETURN" AND market="${syncData.market}"),
+                (SELECT COUNT(*) count FROM app_shopee_v2_order WHERE order_status="COMPLETED" AND market="${syncData.market}")
+            ) ON DUPLICATE KEY UPDATE
+                TOTAL=(SELECT COUNT(*) count FROM app_shopee_v2_order WHERE market="${syncData.market}"),
+                UNPAID=(SELECT COUNT(*) count FROM app_shopee_v2_order WHERE order_status="UNPAID" AND market="${syncData.market}"),
+                READY_TO_SHIP=(SELECT COUNT(*) count FROM app_shopee_v2_order WHERE order_status="READY_TO_SHIP" AND market="${syncData.market}"),
+                RETRY_SHIP=(SELECT COUNT(*) count FROM app_shopee_v2_order WHERE order_status="RETRY_SHIP" AND market="${syncData.market}"),
+                SHIPPED=(SELECT COUNT(*) count FROM app_shopee_v2_order WHERE order_status="SHIPPED" AND market="${syncData.market}"),
+                TO_CONFIRM_RECEIVE=(SELECT COUNT(*) count FROM app_shopee_v2_order WHERE order_status="TO_CONFIRM_RECEIVE" AND market="${syncData.market}"),
+                IN_CANCEL=(SELECT COUNT(*) count FROM app_shopee_v2_order WHERE order_status="IN_CANCEL" AND market="${syncData.market}"),
+                CANCELLED=(SELECT COUNT(*) count FROM app_shopee_v2_order WHERE order_status="CANCELLED" AND market="${syncData.market}"),
+                TO_RETURN=(SELECT COUNT(*) count FROM app_shopee_v2_order WHERE order_status="TO_RETURN" AND market="${syncData.market}"),
+                COMPLETED=(SELECT COUNT(*) count FROM app_shopee_v2_order WHERE order_status="COMPLETED" AND market="${syncData.market}");`,
+            (err,rows)=>{
+                if ( err ) {
+                    error_hook(contents.market,err,(e,res) => {
+                        throw err;
+                    });
+                } else {
+                    resolve();
+                }
+            },{});
+    });
+}
+
 const connectionClose = (callback,bool) => {
     return new Promise((resolve,reject) => {
 
@@ -980,16 +1030,17 @@ const worker = async(sync,callback,bool) => {
             u_count != 0 && await editOrder();
         }
         
-        await updateTrackingNumber();
-        insertData.updateTracking.filter((i) => {
-            if(i.tracking_number != ''){
-                console.log("주문번호", i.order_sn)
-                console.log("트래킹번호", i.tracking_number)
-            }
-        });
+        u_count != 0 && await updateTrackingNumber();
+        // insertData.updateTracking.filter((i) => {
+        //     if(i.tracking_number != ''){
+        //         console.log("주문번호", i.order_sn)
+        //         console.log("트래킹번호", i.tracking_number)
+        //     }
+        // });
 
         await timeSave();
         // insertData.createOrder.length !=0 && await insertOrder();
+        await countSave();
         await connectionClose(callback,bool);
 
     } catch(e){
