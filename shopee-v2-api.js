@@ -363,7 +363,7 @@ const updateTrackingNumber = () => {
             })
 
         }
-        
+
         const callAPI = () => {
             if ( order_count != loop ) {
                 getTracking();
@@ -910,7 +910,7 @@ const timeSave = () => {
                 } else {
                     resolve();
                 }
-            },{});
+            }, {});
     });
 }
 
