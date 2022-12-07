@@ -30,7 +30,7 @@ const insertData = {
     updateTracking: []
 }
 
-const execute = (sql,callback,data = {})=>{
+const execute = (sql,callback,data = {}) => {
     
     pool.getConnection((err,connection) => {
         if (err) throw err;
@@ -69,7 +69,7 @@ const lastCreateTimeTo = () => {
     return new Promise((resolve,reject) => {
         execute(`SELECT time_to FROM app_shopee_v2_api_history WHERE market="${syncData.market}" 
             ORDER BY api_history_id DESC LIMIT 0,1`,
-            (err,rows)=>{
+            (err,rows) => {
                 if ( err ) throw err;
 
                 if ( rows.length >= 1 ) {
@@ -114,7 +114,7 @@ const createOrder = () => {
                     page_size : page_size,
                     cursor : cursor
                 }
-            }).then((response)=>{
+            }).then((response) => {
       
                 let more = response.data.response.more;
 
@@ -128,7 +128,7 @@ const createOrder = () => {
                     resolve(true);
                 }
     
-            }).catch((err)=>{
+            }).catch((err) => {
                 error_hook(syncData.market,err,(e,res) => {
                     console.log("createOrder 에러", err);
                     resolve(false);
@@ -160,12 +160,9 @@ const createOrderDetailsTake = () => {
             let orders = insertData.createOrder.slice(sindex,eindex);
             let order_sn_list = orders.map((value) => value.order_sn);
             let order_sn_list_string = order_sn_list.toString();
-            
             let fields=["buyer_user_id,buyer_username,estimated_shipping_fee,recipient_address,actual_shipping_fee,goods_to_declare,note,note_update_time,item_list,pay_time,dropshipper,dropshipper_phone,split_up,buyer_cancel_reason,cancel_by,cancel_reason,actual_shipping_fee_confirmed,buyer_cpf_id,fulfillment_flag,pickup_done_time,package_list,shipping_carrier,payment_method,total_amount,invoice_data,checkout_shipping_carrier,reverse_shipping_fee,order_chargeable_weight_gram,prescription_images,prescription_check_status"];
             let fileds_string = fields.toString();
             
-            // console.log(`offset: ${offset},limit:${limit}, sindex:${sindex},eindex:${eindex}, order_count:${order_count}`);
-      
             axios({
                 method : 'GET',
                 url : "https://partner.shopeemobile.com/api/v2/order/get_order_detail",
@@ -178,12 +175,12 @@ const createOrderDetailsTake = () => {
                     order_sn_list : order_sn_list_string,
                     response_optional_fields : fileds_string
                 }
-            }).then((response)=>{
+            }).then((response) => {
       
                 insertData.createOrderDetails = insertData.createOrderDetails.concat(response.data.response.order_list);
-
                 callAPI();
-            }).catch((err)=>{
+
+            }).catch((err) => {
                 error_hook(syncData.market,err,(e,res) => {
                     console.log("createOrderDetailsTake 에러", err);
                     resolve(false);
@@ -236,7 +233,7 @@ const updateOrder = () => {
                     page_size : page_size,
                     cursor : cursor
                 }
-            }).then((response)=>{
+            }).then((response) => {
 
                 let more = response.data.response.more;
 
@@ -250,7 +247,7 @@ const updateOrder = () => {
                     resolve(true);
                 }
     
-            }).catch((err)=>{
+            }).catch((err) => {
                 error_hook(syncData.market,err,(e,res) => {
                     console.log("updateOrder 에러", err);
                     resolve(false);
@@ -300,11 +297,11 @@ const updateOrderDetailsTake = () => {
                     order_sn_list : order_sn_list_string,
                     response_optional_fields : fileds_string
                 }
-            }).then((response)=>{
+            }).then((response) => {
                 insertData.updateOrderDetails = insertData.updateOrderDetails.concat(response.data.response.order_list);
 
                 callAPI();
-            }).catch((err)=>{
+            }).catch((err) => {
                 error_hook(syncData.market,err,(e,res) => {
                     console.log("updateOrderDetailsTake 에러", err);
                     resolve(false);
@@ -355,7 +352,7 @@ const updateTrackingNumber = () => {
                     order_sn : insertData.updateOrder[loop].order_sn
                 }
             })
-            .then((response)=>{
+            .then((response) => {
                 // console.log("order_sn", insertData.updateOrder[loop].order_sn);
                 // console.log("response TRACKING", response.data.response.tracking_number);
                 insertData.updateTracking = insertData.updateTracking.concat({'order_sn': insertData.updateOrder[loop].order_sn,'tracking_number': response.data.response.tracking_number});
@@ -363,7 +360,7 @@ const updateTrackingNumber = () => {
                 loop++;
                 callAPI();
             })
-            .catch((err)=>{
+            .catch((err) => {
                 error_hook(syncData.market,err,(e,res) => {
                     console.log("updateTrackingNumber 에러", err);
                     resolve(false);
@@ -531,7 +528,7 @@ const databaseInsert = (order,callback) => {
     }
 
     execute(`INSERT IGNORE INTO app_shopee_v2_order SET ?`,
-    (err,rows)=>{
+    (err,rows) => {
         if ( err ) {
             error_hook(syncData.market,err,(e,res) => {
                 console.log("databaseInsert app_shopee_v2_order 에러", err);
@@ -570,7 +567,7 @@ const databaseInsert = (order,callback) => {
         tomodel_items.image_info_image_url = items[loop].image_info.image_url;
 
         execute(`INSERT IGNORE INTO app_shopee_v2_order_details SET ?`,
-            (err,rows)=>{
+            (err,rows) => {
                 if ( err ) {
                     error_hook(syncData.market,err,(e,res) => {
                         console.log("databaseInsert app_shopee_v2_order_details 에러", err);
@@ -769,7 +766,7 @@ const databaseReplace = (order,callback) => {
             split_up = "${order.split_up}",
             total_amount= ${Number(order.total_amount)}
         `,
-        (err,rows)=>{
+        (err,rows) => {
             if ( err ) {
                 error_hook(syncData.market,err,(e,res) => {
                     console.log("databaseReplace app_shopee_v2_order 에러", err);
@@ -846,7 +843,7 @@ const databaseReplace = (order,callback) => {
                 promotion_id = ${items[loop].promotion_id},
                 image_info_image_url = "${items[loop].image_info.image_ur}"
             `,
-            (err,rows)=>{
+            (err,rows) => {
                 if ( err ) {
                     error_hook(syncData.market,err,(e,res) => {
                         console.log("databaseReplace app_shopee_v2_order_details 에러", err);
@@ -919,7 +916,7 @@ const timeSave = () => {
                 "${insertData.createMore}",
                 "${insertData.updateMore}"
             )`,
-            (err,rows)=>{
+            (err,rows) => {
                 if ( err ) {
                     throw err;
                 } else {
@@ -967,7 +964,7 @@ const countSave = () => {
                 CANCELLED=(SELECT COUNT(*) count FROM app_shopee_v2_order WHERE order_status="CANCELLED" AND market="${syncData.market}"),
                 TO_RETURN=(SELECT COUNT(*) count FROM app_shopee_v2_order WHERE order_status="TO_RETURN" AND market="${syncData.market}"),
                 COMPLETED=(SELECT COUNT(*) count FROM app_shopee_v2_order WHERE order_status="COMPLETED" AND market="${syncData.market}");`,
-            (err,rows)=>{
+            (err,rows) => {
                 if ( err ) {
                     error_hook(syncData.market,err,(e,res) => {
                         console.log("countSave 에러", err);
