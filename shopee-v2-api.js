@@ -70,8 +70,8 @@ const lastCreateTimeTo = () => {
         execute(`SELECT time_to FROM app_shopee_v2_api_history WHERE market="${syncData.market}" 
             ORDER BY api_history_id DESC LIMIT 0,1`,
             (err,rows) => {
-                if ( err ) throw err;
 
+                if ( err ) throw err;
                 if ( rows.length >= 1 ) {
                     contents.time_from = Number(rows[0].time_to);
                     contents.time_to = time_result;
@@ -187,6 +187,7 @@ const createOrderDetailsTake = () => {
                 });
             });
         }
+
         const callAPI = () => {
 
             offset = limit + offset;
@@ -199,7 +200,6 @@ const createOrderDetailsTake = () => {
                 resolve(true);
             }
         }
-
         getOrderDetails(sindex,eindex);
     });
 }
@@ -283,8 +283,6 @@ const updateOrderDetailsTake = () => {
             let fields=["buyer_user_id,buyer_username,estimated_shipping_fee,recipient_address,actual_shipping_fee,goods_to_declare,note,note_update_time,item_list,pay_time,dropshipper,dropshipper_phone,split_up,buyer_cancel_reason,cancel_by,cancel_reason,actual_shipping_fee_confirmed,buyer_cpf_id,fulfillment_flag,pickup_done_time,package_list,shipping_carrier,payment_method,total_amount,invoice_data,checkout_shipping_carrier,reverse_shipping_fee,order_chargeable_weight_gram,prescription_images,prescription_check_status"];
             let fileds_string = fields.toString();
             
-            // console.log(`offset: ${offset},limit:${limit}, sindex:${sindex},eindex:${eindex}, order_count:${order_count}`);
-      
             axios({
                 method : 'GET',
                 url : "https://partner.shopeemobile.com/api/v2/order/get_order_detail",
@@ -298,9 +296,10 @@ const updateOrderDetailsTake = () => {
                     response_optional_fields : fileds_string
                 }
             }).then((response) => {
-                insertData.updateOrderDetails = insertData.updateOrderDetails.concat(response.data.response.order_list);
 
+                insertData.updateOrderDetails = insertData.updateOrderDetails.concat(response.data.response.order_list);
                 callAPI();
+
             }).catch((err) => {
                 error_hook(syncData.market,err,(e,res) => {
                     console.log("updateOrderDetailsTake 에러", err);
@@ -308,6 +307,7 @@ const updateOrderDetailsTake = () => {
                 });
             });
         }
+
         const callAPI = () => {
 
             offset = limit + offset;
@@ -320,7 +320,6 @@ const updateOrderDetailsTake = () => {
                 resolve(true);
             }
         }
-
         getOrderDetails(sindex,eindex);
     });
 }
@@ -338,9 +337,8 @@ const updateTrackingNumber = () => {
         let loop = 0;
         
         const getTracking = () => {
-            // console.log("insertData.updateOrder[loop].order_sn", insertData.updateOrder[loop].order_sn)
-            axios({
 
+            axios({
                 method : 'GET',
                 url : "https://partner.shopeemobile.com/api/v2/logistics/get_tracking_number",
                 params : {
@@ -351,32 +349,28 @@ const updateTrackingNumber = () => {
                     sign : sign,
                     order_sn : insertData.updateOrder[loop].order_sn
                 }
-            })
-            .then((response) => {
-                // console.log("order_sn", insertData.updateOrder[loop].order_sn);
-                // console.log("response TRACKING", response.data.response.tracking_number);
+            }).then((response) => {
+
                 insertData.updateTracking = insertData.updateTracking.concat({'order_sn': insertData.updateOrder[loop].order_sn,'tracking_number': response.data.response.tracking_number});
-                // console.log("insertData.updateTracking",insertData.updateTracking)
                 loop++;
                 callAPI();
-            })
-            .catch((err) => {
+
+            }).catch((err) => {
                 error_hook(syncData.market,err,(e,res) => {
                     console.log("updateTrackingNumber 에러", err);
                     resolve(false);
                 });
             })
+
         }
-
+        
         const callAPI = () => {
-
             if ( order_count != loop ) {
                 getTracking();
             } else {
                 resolve(insertData.updateTracking);
             }
         }
-
         getTracking();
     })
 }
@@ -385,6 +379,7 @@ const createOrderDetailsBundle = () => {
     return new Promise((resolve,reject) => {
 
         if ( insertData.createOrderDetails.length > 0 ) {
+
             let loop = 0;
 
             const func = () => {
@@ -528,16 +523,16 @@ const databaseInsert = (order,callback) => {
     }
 
     execute(`INSERT IGNORE INTO app_shopee_v2_order SET ?`,
-    (err,rows) => {
-        if ( err ) {
-            error_hook(syncData.market,err,(e,res) => {
-                console.log("databaseInsert app_shopee_v2_order 에러", err);
-                throw err;
-            });
-        } else {
-            check();
-        }
-    }, tomodel_order);
+        (err,rows) => {
+            if ( err ) {
+                error_hook(syncData.market,err,(e,res) => {
+                    console.log("databaseInsert app_shopee_v2_order 에러", err);
+                    throw err;
+                });
+            } else {
+                check();
+            }
+        }, tomodel_order);
 
     // item_list
     let loop = 0;
@@ -548,7 +543,6 @@ const databaseInsert = (order,callback) => {
 
         tomodel_items.order_sn = order.order_sn;
         tomodel_items.market = syncData.market;
-
         tomodel_items.item_id = items[loop].item_id;
         tomodel_items.item_name = items[loop].item_name.replace(/"/g, '\\"');
         tomodel_items.item_sku = items[loop].item_sku;
@@ -578,9 +572,7 @@ const databaseInsert = (order,callback) => {
                 }
             },tomodel_items);
     }
-
     loopFn();
-
 }
 
 const insertOrder = () => {
@@ -775,7 +767,7 @@ const databaseReplace = (order,callback) => {
             } else {
                 check();
             }
-        },{});
+        }, {});
             
     // items
     let loop = 0;
@@ -852,26 +844,22 @@ const databaseReplace = (order,callback) => {
                 } else {
                     (items.length == ++loop) ? check() : loopFn();
                 }
-            },{});
+            }, {});
     }
     loopFn();
-
 }
 
 const editOrder = () => {
     return new Promise((resolve,reject) => {
 
         let loop = 0;
-
         const callAPI = () => {
 
             insertData.updateOrderDetails.length == loop ? 
                 resolve() :
                 databaseReplace(insertData.updateOrderDetails[loop++],callAPI);
         }
-
         databaseReplace(insertData.updateOrderDetails[loop++],callAPI);
-
     });
 }
 
@@ -881,18 +869,17 @@ const databaseUpdateTracking = (trackingData) => {
         trackingData.forEach(i => { 
             
             console.log("tracking_data", i.order_sn, i.tracking_number);
-
             execute(`UPDATE app_shopee_v2_order
                         SET tracking_number="${i.tracking_number}"
                         WHERE order_sn = "${i.order_sn}";`,
-                        (err,rows) => {
-                            if (err) {
-                                error_hook(syncData.market,err,(e,res) => {
-                                    console.log("databaseUpdateTracking 에러", err);
-                                    throw err;
-                                });
-                            }
-                        }, {});
+                (err,rows) => {
+                    if (err) {
+                        error_hook(syncData.market,err,(e,res) => {
+                            console.log("databaseUpdateTracking 에러", err);
+                            throw err;
+                        });
+                    }
+                }, {});
         })
         resolve();
     });
@@ -901,7 +888,8 @@ const databaseUpdateTracking = (trackingData) => {
 const timeSave = () => {
     return new Promise((resolve,reject) => {
         
-        execute(`INSERT INTO app_shopee_v2_api_history (
+        execute(`INSERT INTO app_shopee_v2_api_history
+            (
                 market,
                 time_to,
                 create_count,
@@ -929,7 +917,8 @@ const timeSave = () => {
 const countSave = () => {
     return new Promise((resolve,reject) => {
         
-        execute(`INSERT INTO app_shopee_v2_count (
+        execute(`INSERT INTO app_shopee_v2_count
+            (
                 market,
                 TOTAL,
                 UNPAID,
@@ -973,7 +962,7 @@ const countSave = () => {
                 } else {
                     resolve();
                 }
-            },{});
+            }, {});
     });
 }
 
