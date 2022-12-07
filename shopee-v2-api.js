@@ -76,7 +76,7 @@ const lastCreateTimeTo = () => {
                     contents.time_to = time_result;
                     resolve();
                 } else {
-                    contents.time_from = time_result - 864000;
+                    contents.time_from = time_result - 86400;
                     contents.time_to = time_result;
                     resolve();
                 }
