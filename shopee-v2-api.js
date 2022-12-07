@@ -40,6 +40,7 @@ const execute = (sql,callback,data = {})=>{
 
             if ( err ) {
                 error_hook(syncData.market,err,(e,res) => {
+                    console.log("execute", err);
                     throw err;
                 });
             } else {
@@ -129,8 +130,8 @@ const createOrder = () => {
     
             }).catch((err)=>{
                 error_hook(syncData.market,err,(e,res) => {
+                    console.log("createOrder 에러", err);
                     resolve(false);
-                    console.log(err.response.data);
                 });
             })
 
@@ -184,8 +185,8 @@ const createOrderDetailsTake = () => {
                 callAPI();
             }).catch((err)=>{
                 error_hook(syncData.market,err,(e,res) => {
+                    console.log("createOrderDetailsTake 에러", err);
                     resolve(false);
-                    console.log(err.response.data);
                 });
             });
         }
@@ -251,8 +252,8 @@ const updateOrder = () => {
     
             }).catch((err)=>{
                 error_hook(syncData.market,err,(e,res) => {
+                    console.log("updateOrder 에러", err);
                     resolve(false);
-                    console.log(err.response.data);
                 });
             })
 
@@ -305,8 +306,8 @@ const updateOrderDetailsTake = () => {
                 callAPI();
             }).catch((err)=>{
                 error_hook(syncData.market,err,(e,res) => {
+                    console.log("updateOrderDetailsTake 에러", err);
                     resolve(false);
-                    console.log(err.response.data);
                 });
             });
         }
@@ -364,8 +365,8 @@ const updateTrackingNumber = () => {
             })
             .catch((err)=>{
                 error_hook(syncData.market,err,(e,res) => {
+                    console.log("updateTrackingNumber 에러", err);
                     resolve(false);
-                    console.log(err.response.data);
                 });
             })
         }
@@ -417,7 +418,6 @@ const createOrderDetailsBundle = () => {
                 insertData.createOrderDetails[loop].item_list = bundle;
                 (++loop==insertData.createOrderDetails.length) ? resolve() : func();
             }
-
             func();
         } else {
             resolve();
@@ -460,7 +460,6 @@ const updateOrderDetailsBundle = () => {
                 insertData.updateOrderDetails[loop].item_list = bundle;
                 (++loop==insertData.updateOrderDetails.length) ? resolve() : func();
             }
-
             func();
         } else {
             resolve();
@@ -535,6 +534,7 @@ const databaseInsert = (order,callback) => {
     (err,rows)=>{
         if ( err ) {
             error_hook(syncData.market,err,(e,res) => {
+                console.log("databaseInsert app_shopee_v2_order 에러", err);
                 throw err;
             });
         } else {
@@ -573,6 +573,7 @@ const databaseInsert = (order,callback) => {
             (err,rows)=>{
                 if ( err ) {
                     error_hook(syncData.market,err,(e,res) => {
+                        console.log("databaseInsert app_shopee_v2_order_details 에러", err);
                         throw err;
                     });
                 } else {
@@ -771,6 +772,7 @@ const databaseReplace = (order,callback) => {
         (err,rows)=>{
             if ( err ) {
                 error_hook(syncData.market,err,(e,res) => {
+                    console.log("databaseReplace app_shopee_v2_order 에러", err);
                     throw err;
                 });
             } else {
@@ -847,6 +849,7 @@ const databaseReplace = (order,callback) => {
             (err,rows)=>{
                 if ( err ) {
                     error_hook(syncData.market,err,(e,res) => {
+                        console.log("databaseReplace app_shopee_v2_order_details 에러", err);
                         throw err;
                     });
                 } else {
@@ -888,6 +891,7 @@ const databaseUpdateTracking = (trackingData) => {
                         (err,rows) => {
                             if (err) {
                                 error_hook(syncData.market,err,(e,res) => {
+                                    console.log("databaseUpdateTracking 에러", err);
                                     throw err;
                                 });
                             }
@@ -966,6 +970,7 @@ const countSave = () => {
             (err,rows)=>{
                 if ( err ) {
                     error_hook(syncData.market,err,(e,res) => {
+                        console.log("countSave 에러", err);
                         throw err;
                     });
                 } else {
@@ -1074,4 +1079,3 @@ const worker = async(sync,callback,bool) => {
 }
 
 module.exports = worker;
-
