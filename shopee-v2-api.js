@@ -5,7 +5,7 @@ const env = require('./env').env;
 const pool = require('./connection-pool').createPool(config[env].database);
 const axios = require('axios');
 const crypto = require('crypto');
-// const error_hook = require('./slack-lazada-order');
+const error_hook = require('./slackhook');
 
 const syncData = {
     market : '',
@@ -39,7 +39,9 @@ const execute = (sql,callback,data = {})=>{
             connection.release();
 
             if ( err ) {
-                throw err;
+                error_hook(syncData.market,err,(e,res) => {
+                    throw err;
+                });
             } else {
                 callback(err, rows);
             }
@@ -74,7 +76,7 @@ const lastCreateTimeTo = () => {
                     contents.time_to = time_result;
                     resolve();
                 } else {
-                    contents.time_from = time_result - 86400;
+                    contents.time_from = time_result - 864000;
                     contents.time_to = time_result;
                     resolve();
                 }
@@ -126,9 +128,10 @@ const createOrder = () => {
                 }
     
             }).catch((err)=>{
-                console.log("ERR")
-                console.log(err);
-                resolve(false);
+                error_hook(syncData.market,err,(e,res) => {
+                    resolve(false);
+                    console.log(err.response.data);
+                });
             })
 
         }
@@ -180,9 +183,10 @@ const createOrderDetailsTake = () => {
 
                 callAPI();
             }).catch((err)=>{
-                console.log("createOrderDetails ERR");
-                console.log(err);
-                resolve(false);
+                error_hook(syncData.market,err,(e,res) => {
+                    resolve(false);
+                    console.log(err.response.data);
+                });
             });
         }
         const callAPI = () => {
@@ -246,9 +250,10 @@ const updateOrder = () => {
                 }
     
             }).catch((err)=>{
-                // console.log("ERR")
-                console.log(err);
-                resolve(false);
+                error_hook(syncData.market,err,(e,res) => {
+                    resolve(false);
+                    console.log(err.response.data);
+                });
             })
 
         }
@@ -299,9 +304,10 @@ const updateOrderDetailsTake = () => {
 
                 callAPI();
             }).catch((err)=>{
-                console.log("updateOrderDetails ERR");
-                console.log(err);
-                resolve(false);
+                error_hook(syncData.market,err,(e,res) => {
+                    resolve(false);
+                    console.log(err.response.data);
+                });
             });
         }
         const callAPI = () => {
@@ -351,15 +357,16 @@ const updateTrackingNumber = () => {
             .then((response)=>{
                 // console.log("order_sn", insertData.updateOrder[loop].order_sn);
                 // console.log("response TRACKING", response.data.response.tracking_number);
-
                 insertData.updateTracking = insertData.updateTracking.concat({'order_sn': insertData.updateOrder[loop].order_sn,'tracking_number': response.data.response.tracking_number});
-                console.log("insertData.updateTracking",insertData.updateTracking)
+                // console.log("insertData.updateTracking",insertData.updateTracking)
                 loop++;
                 callAPI();
             })
             .catch((err)=>{
-                console.log("ERR")
-                console.log(err);
+                error_hook(syncData.market,err,(e,res) => {
+                    resolve(false);
+                    console.log(err.response.data);
+                });
             })
         }
 
@@ -368,7 +375,7 @@ const updateTrackingNumber = () => {
             if ( order_count != loop ) {
                 getTracking();
             } else {
-                resolve(true);
+                resolve(insertData.updateTracking);
             }
         }
 
@@ -392,18 +399,12 @@ const createOrderDetailsBundle = () => {
                     
                     for ( let k in bundle ) {
 
-                        // console.log("TRUE OR FALSE", items[i].item_id == bundle[k].item_id 
-                        // && items[i].model_id == bundle[k].model_id
-                        // && items[i].add_on_deal_id == bundle[k].add_on_deal_id
-                        // && items[i].promotion_id == bundle[k].promotion_id);
-                        
                         if ( items[i].item_id == bundle[k].item_id 
                             && items[i].model_id == bundle[k].model_id
                             && items[i].add_on_deal_id == bundle[k].add_on_deal_id
                             && items[i].promotion_id == bundle[k].promotion_id ) {
                             bundle[k].model_quantity_purchased = Number(bundle[k].model_quantity_purchased) + Number(items[i].model_quantity_purchased);
 
-                            console.log("bundle", bundle[k].model_quantity_purchased)
                             check = false;
                         }
                     }
@@ -533,7 +534,9 @@ const databaseInsert = (order,callback) => {
     execute(`INSERT IGNORE INTO app_shopee_v2_order SET ?`,
     (err,rows)=>{
         if ( err ) {
-            throw err;
+            error_hook(syncData.market,err,(e,res) => {
+                throw err;
+            });
         } else {
             check();
         }
@@ -569,7 +572,9 @@ const databaseInsert = (order,callback) => {
         execute(`INSERT IGNORE INTO app_shopee_v2_order_details SET ?`,
             (err,rows)=>{
                 if ( err ) {
-                    throw err;
+                    error_hook(syncData.market,err,(e,res) => {
+                        throw err;
+                    });
                 } else {
                     (items.length == ++loop) ? check() : loopFn();
                 }
@@ -765,7 +770,9 @@ const databaseReplace = (order,callback) => {
         `,
         (err,rows)=>{
             if ( err ) {
-                throw err;
+                error_hook(syncData.market,err,(e,res) => {
+                    throw err;
+                });
             } else {
                 check();
             }
@@ -839,7 +846,7 @@ const databaseReplace = (order,callback) => {
             `,
             (err,rows)=>{
                 if ( err ) {
-                    error_hook(contents.market,err,(e,res) => {
+                    error_hook(syncData.market,err,(e,res) => {
                         throw err;
                     });
                 } else {
@@ -865,6 +872,28 @@ const editOrder = () => {
 
         databaseReplace(insertData.updateOrderDetails[loop++],callAPI);
 
+    });
+}
+
+const databaseUpdateTracking = (trackingData) => {
+    return new Promise((resolve,reject) => {
+        
+        trackingData.forEach(i => { 
+            
+            console.log("tracking_data", i.order_sn, i.tracking_number);
+
+            execute(`UPDATE app_shopee_v2_order
+                        SET tracking_number="${i.tracking_number}"
+                        WHERE order_sn = "${i.order_sn}";`,
+                        (err,rows) => {
+                            if (err) {
+                                error_hook(syncData.market,err,(e,res) => {
+                                    throw err;
+                                });
+                            }
+                        }, {});
+        })
+        resolve();
     });
 }
 
@@ -936,7 +965,7 @@ const countSave = () => {
                 COMPLETED=(SELECT COUNT(*) count FROM app_shopee_v2_order WHERE order_status="COMPLETED" AND market="${syncData.market}");`,
             (err,rows)=>{
                 if ( err ) {
-                    error_hook(contents.market,err,(e,res) => {
+                    error_hook(syncData.market,err,(e,res) => {
                         throw err;
                     });
                 } else {
@@ -967,7 +996,6 @@ const worker = async(sync,callback,bool) => {
         console.log('=====================================================================');
         console.log(new Date() + ' 시작');
 
-        // insertData 초기화
         insertData.createOrder = [];
         insertData.createOrderDetails = [];
         insertData.createMore = false;
@@ -1030,16 +1058,13 @@ const worker = async(sync,callback,bool) => {
             u_count != 0 && await editOrder();
         }
         
-        u_count != 0 && await updateTrackingNumber();
-        // insertData.updateTracking.filter((i) => {
-        //     if(i.tracking_number != ''){
-        //         console.log("주문번호", i.order_sn)
-        //         console.log("트래킹번호", i.tracking_number)
-        //     }
-        // });
+        // 트래킹정보 업데이트
+        if (u_count != 0 ) {
+            let trackingData = await updateTrackingNumber();
+            await databaseUpdateTracking(trackingData);
+        }
 
         await timeSave();
-        // insertData.createOrder.length !=0 && await insertOrder();
         await countSave();
         await connectionClose(callback,bool);
 
