@@ -547,8 +547,8 @@ const databaseInsert = (order,callback) => {
         tomodel_items.item_name = items[loop].item_name.replace(/"/g, '\\"');
         tomodel_items.item_sku = items[loop].item_sku;
         tomodel_items.model_id = items[loop].model_id;
-        tomodel_items.model_sku = items[loop].model_sku;
         tomodel_items.model_name = items[loop].model_name;
+        tomodel_items.model_sku = items[loop].model_sku;
         tomodel_items.model_quantity_purchased = items[loop].model_quantity_purchased;
         tomodel_items.model_original_price = Number(items[loop].model_original_price);
         tomodel_items.model_discounted_price = Number(items[loop].model_discounted_price);
@@ -782,6 +782,7 @@ const databaseReplace = (order,callback) => {
                 item_name,
                 item_sku,
                 model_id,
+                model_name,
                 model_sku,
                 model_quantity_purchased,
                 model_original_price,
@@ -803,6 +804,7 @@ const databaseReplace = (order,callback) => {
                 "${items[loop].item_name.replace(/"/g, '\\"')}",
                 "${items[loop].item_sku}",
                 ${items[loop].model_id},
+                "${items[loop].model_name}",
                 "${items[loop].model_sku}",
                 "${items[loop].model_quantity_purchased}",
                 ${Number(items[loop].model_original_price)},
@@ -823,6 +825,7 @@ const databaseReplace = (order,callback) => {
                 item_name = "${items[loop].item_name.replace(/"/g, '\\"')}",
                 item_sku = "${items[loop].item_sku}",
                 model_id = ${items[loop].model_id},
+                model_name = "${items[loop].model_name}",
                 model_sku = "${items[loop].model_sku}",
                 model_quantity_purchased = "${items[loop].model_quantity_purchased}",
                 model_original_price = ${Number(items[loop].model_original_price)},
