@@ -548,6 +548,7 @@ const databaseInsert = (order,callback) => {
         tomodel_items.item_sku = items[loop].item_sku;
         tomodel_items.model_id = items[loop].model_id;
         tomodel_items.model_sku = items[loop].model_sku;
+        tomodel_items.model_name = items[loop].model_name;
         tomodel_items.model_quantity_purchased = items[loop].model_quantity_purchased;
         tomodel_items.model_original_price = Number(items[loop].model_original_price);
         tomodel_items.model_discounted_price = Number(items[loop].model_discounted_price);
