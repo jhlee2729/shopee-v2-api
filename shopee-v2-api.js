@@ -27,7 +27,8 @@ const insertData = {
     updateOrder: [],
     updateOrderDetails: [],
     updateMore: false,
-    updateTracking: []
+    getTrackingInfo: [],
+    updateShippingDocument: []
 }
 
 const execute = (sql,callback,data = {}) => {
@@ -324,7 +325,7 @@ const updateOrderDetailsTake = () => {
     });
 }
 
-const updateTrackingNumber = () => {
+const getTrackingNumber = () => {
     return new Promise((resolve,reject) => {
 
         let path = `/api/v2/logistics/get_tracking_number`
@@ -335,7 +336,7 @@ const updateTrackingNumber = () => {
 
         let order_count = insertData.updateOrder.length;
         let loop = 0;
-        
+
         const getTracking = () => {
 
             axios({
@@ -351,13 +352,15 @@ const updateTrackingNumber = () => {
                 }
             }).then((response) => {
 
-                insertData.updateTracking = insertData.updateTracking.concat({'order_sn': insertData.updateOrder[loop].order_sn,'tracking_number': response.data.response.tracking_number});
+                console.log(`order_sn: ${insertData.updateOrder[loop].order_sn}. order_status':${insertData.updateOrderDetails[loop].order_status} tracking_number: ${response.data.response.tracking_number}`);
+
+                insertData.getTrackingInfo = insertData.getTrackingInfo.concat({'order_sn': insertData.updateOrder[loop].order_sn, 'order_status':insertData.updateOrderDetails[loop].order_status, 'tracking_number': response.data.response.tracking_number});
                 loop++;
                 callAPI();
 
             }).catch((err) => {
                 error_hook(syncData.market,err,(e,res) => {
-                    console.log("updateTrackingNumber 에러", err);
+                    console.log("getTrackingNumber 에러", err);
                     resolve(false);
                 });
             })
@@ -368,10 +371,67 @@ const updateTrackingNumber = () => {
             if ( order_count != loop ) {
                 getTracking();
             } else {
-                resolve(insertData.updateTracking);
+                resolve(insertData.getTrackingInfo);
             }
         }
         getTracking();
+
+    })
+}
+
+const getShipDocumentInfo = (result) => {
+    return new Promise((resolve,reject) => {
+        
+        let update_order_sn = [];
+        let update_count = result.length;
+
+        result.forEach(i => {
+            update_order_sn.push(i.order_sn);
+        });
+
+        let path = `/api/v2/logistics/get_shipping_document_info`
+        let timestamp = new Date().getTime();
+        let convert = Number((timestamp.toString()).substr(0, 10));
+        let sign_format = `${syncData.partner_id}${path}${convert}${syncData.access_token}${syncData.shop_id}`;
+        let sign = signature(sign_format);
+
+        let loop = 0;
+
+        const getShipDocument = () => {
+
+            axios({
+                method : 'GET',
+                url : "https://partner.shopeemobile.com/api/v2/logistics/get_shipping_document_info",
+                params : {
+                    partner_id : syncData.partner_id,
+                    timestamp : convert,
+                    access_token : syncData.access_token,
+                    shop_id : syncData.shop_id,
+                    sign : sign,
+                    order_sn : update_order_sn[loop]
+                }
+            }).then((response) => {
+
+                insertData.updateShippingDocument = insertData.updateShippingDocument.concat({'order_sn': update_order_sn[loop], 'tracking_number': response.data.response.shipping_document_info.tracking_number, 'service_code': response.data.response.shipping_document_info.service_code})
+                loop++;
+                callAPI();
+
+            }).catch((err) => {
+                error_hook(syncData.market,err,(e,res) => {
+                    console.log("getShipDocumentInfo 에러", err);
+                    resolve(false);
+                });
+            })
+
+        }
+        const callAPI = () => {
+            if ( update_count != loop ) {
+                getShipDocument();
+            } else {
+                resolve(insertData.updateShippingDocument);
+            }
+        }
+        getShipDocument();
     })
 }
 
@@ -867,14 +927,13 @@ const editOrder = () => {
     });
 }
 
-const databaseUpdateTracking = (trackingData) => {
+const databaseUpdateTracking = (updateData) => {
     return new Promise((resolve,reject) => {
         
-        trackingData.forEach(i => { 
-            
-            console.log("tracking_data", i.order_sn, i.tracking_number);
+        updateData.forEach(i => { 
+            console.log("updateData", i.order_sn, i.tracking_number, i.service_code);
             execute(`UPDATE app_shopee_v2_order
-                        SET tracking_number="${i.tracking_number}"
+                        SET tracking_number="${i.tracking_number}", service_code ="${i.service_code}"
                         WHERE order_sn = "${i.order_sn}";`,
                 (err,rows) => {
                     if (err) {
@@ -997,7 +1056,8 @@ const worker = async(sync,callback,bool) => {
         insertData.updateOrder = [];
         insertData.updateOrderDetails = [];
         insertData.updateMore = false;
-        insertData.updateTracking = [];
+        insertData.getTrackingInfo = [];
+        insertData.updateShippingDocument = [];
 
         syncData.market = sync.market;
         syncData.shop_id = sync.shop_id;
@@ -1055,8 +1115,13 @@ const worker = async(sync,callback,bool) => {
         
         // 트래킹정보 업데이트
         if (u_count != 0 ) {
-            let trackingData = await updateTrackingNumber();
-            await databaseUpdateTracking(trackingData);
+            let trackingInfo = await getTrackingNumber();
+            let result = trackingInfo.filter(i => (i.order_status === "READY_TO_SHIP" && i.tracking_number !== ''));c
+            console.log(`총수량 : ${trackingInfo.length}, 업데이트수량: ${result.length}`)
+            if (result.length != 0) {
+                let updateData = await getShipDocumentInfo(result);
+                await databaseUpdateTracking(updateData);
+            }
         }
 
         await timeSave();
