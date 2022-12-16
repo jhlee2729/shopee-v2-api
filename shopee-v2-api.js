@@ -27,7 +27,6 @@ const insertData = {
     updateOrder: [],
     updateOrderDetails: [],
     updateMore: false,
-    getTrackingInfo: [],
     updateShippingDocument: []
 }
 
@@ -379,22 +378,16 @@ const getTrackingNumber = () => {
     })
 }
 
-const getShipDocumentInfo = (result) => {
+const getShipDocumentInfo = () => {
     return new Promise((resolve,reject) => {
         
-        let update_order_sn = [];
-        let update_count = result.length;
-
-        result.forEach(i => {
-            update_order_sn.push(i.order_sn);
-        });
-
         let path = `/api/v2/logistics/get_shipping_document_info`
         let timestamp = new Date().getTime();
         let convert = Number((timestamp.toString()).substr(0, 10));
         let sign_format = `${syncData.partner_id}${path}${convert}${syncData.access_token}${syncData.shop_id}`;
         let sign = signature(sign_format);
 
+        let order_count = insertData.updateOrder.length;
         let loop = 0;
 
         const getShipDocument = () => {
@@ -408,11 +401,14 @@ const getShipDocumentInfo = (result) => {
                     access_token : syncData.access_token,
                     shop_id : syncData.shop_id,
                     sign : sign,
-                    order_sn : update_order_sn[loop]
+                    order_sn : insertData.updateOrder[loop].order_sn
                 }
             }).then((response) => {
 
-                insertData.updateShippingDocument = insertData.updateShippingDocument.concat({'order_sn': update_order_sn[loop], 'tracking_number': response.data.response.shipping_document_info.tracking_number, 'service_code': response.data.response.shipping_document_info.service_code})
+                if ( response.data.response !== undefined) {
+                    insertData.updateShippingDocument = insertData.updateShippingDocument.concat({'order_sn': insertData.updateOrder[loop].order_sn, 'tracking_number': response.data.response.shipping_document_info.tracking_number, 'service_code': response.data.response.shipping_document_info.service_code})
+                }
+                
                 loop++;
                 callAPI();
 
@@ -424,13 +420,16 @@ const getShipDocumentInfo = (result) => {
             })
 
         }
+
         const callAPI = () => {
-            if ( update_count != loop ) {
+            if ( order_count != loop ) {
                 getShipDocument();
             } else {
+                console.log(`총수량 : ${insertData.updateOrder.length}, 업데이트수량 : ${insertData.updateShippingDocument.length}`)
                 resolve(insertData.updateShippingDocument);
             }
         }
+        
         getShipDocument();
     })
 }
@@ -927,10 +926,10 @@ const editOrder = () => {
     });
 }
 
-const databaseUpdateTracking = (updateData) => {
+const databaseUpdateTracking = (trackingData) => {
     return new Promise((resolve,reject) => {
         
-        updateData.forEach(i => { 
+        trackingData.forEach(i => { 
             console.log("updateData", i.order_sn, i.tracking_number, i.service_code);
             execute(`UPDATE app_shopee_v2_order
                         SET tracking_number="${i.tracking_number}", service_code ="${i.service_code}"
@@ -1056,7 +1055,6 @@ const worker = async(sync,callback,bool) => {
         insertData.updateOrder = [];
         insertData.updateOrderDetails = [];
         insertData.updateMore = false;
-        insertData.getTrackingInfo = [];
         insertData.updateShippingDocument = [];
 
         syncData.market = sync.market;
@@ -1115,13 +1113,8 @@ const worker = async(sync,callback,bool) => {
         
         // 트래킹정보 업데이트
         if (u_count != 0 ) {
-            let trackingInfo = await getTrackingNumber();
-            let result = trackingInfo.filter(i => (i.order_status === "READY_TO_SHIP" && i.tracking_number !== ''));
-            console.log(`총수량 : ${trackingInfo.length}, 업데이트수량: ${result.length}`)
-            if (result.length != 0) {
-                let updateData = await getShipDocumentInfo(result);
-                await databaseUpdateTracking(updateData);
-            }
+            let trackingData = await getShipDocumentInfo();
+            await databaseUpdateTracking(trackingData);
         }
 
         await timeSave();
