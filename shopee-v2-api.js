@@ -1116,7 +1116,7 @@ const worker = async(sync,callback,bool) => {
         // 트래킹정보 업데이트
         if (u_count != 0 ) {
             let trackingInfo = await getTrackingNumber();
-            let result = trackingInfo.filter(i => (i.order_status === "READY_TO_SHIP" && i.tracking_number !== ''));c
+            let result = trackingInfo.filter(i => (i.order_status === "READY_TO_SHIP" && i.tracking_number !== ''));
             console.log(`총수량 : ${trackingInfo.length}, 업데이트수량: ${result.length}`)
             if (result.length != 0) {
                 let updateData = await getShipDocumentInfo(result);
