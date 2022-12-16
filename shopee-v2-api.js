@@ -324,60 +324,6 @@ const updateOrderDetailsTake = () => {
     });
 }
 
-const getTrackingNumber = () => {
-    return new Promise((resolve,reject) => {
-
-        let path = `/api/v2/logistics/get_tracking_number`
-        let timestamp = new Date().getTime();
-        let convert = Number((timestamp.toString()).substr(0, 10));
-        let sign_format = `${syncData.partner_id}${path}${convert}${syncData.access_token}${syncData.shop_id}`;
-        let sign = signature(sign_format);
-
-        let order_count = insertData.updateOrder.length;
-        let loop = 0;
-
-        const getTracking = () => {
-
-            axios({
-                method : 'GET',
-                url : "https://partner.shopeemobile.com/api/v2/logistics/get_tracking_number",
-                params : {
-                    partner_id : syncData.partner_id,
-                    timestamp : convert,
-                    access_token : syncData.access_token,
-                    shop_id : syncData.shop_id,
-                    sign : sign,
-                    order_sn : insertData.updateOrder[loop].order_sn
-                }
-            }).then((response) => {
-
-                console.log(`order_sn: ${insertData.updateOrder[loop].order_sn}. order_status':${insertData.updateOrderDetails[loop].order_status} tracking_number: ${response.data.response.tracking_number}`);
-
-                insertData.getTrackingInfo = insertData.getTrackingInfo.concat({'order_sn': insertData.updateOrder[loop].order_sn, 'order_status':insertData.updateOrderDetails[loop].order_status, 'tracking_number': response.data.response.tracking_number});
-                loop++;
-                callAPI();
-
-            }).catch((err) => {
-                error_hook(syncData.market,err,(e,res) => {
-                    console.log("getTrackingNumber 에러", err);
-                    resolve(false);
-                });
-            })
-
-        }
-
-        const callAPI = () => {
-            if ( order_count != loop ) {
-                getTracking();
-            } else {
-                resolve(insertData.getTrackingInfo);
-            }
-        }
-        getTracking();
-
-    })
-}
-
 const getShipDocumentInfo = () => {
     return new Promise((resolve,reject) => {
         
@@ -429,7 +375,7 @@ const getShipDocumentInfo = () => {
                 resolve(insertData.updateShippingDocument);
             }
         }
-        
+
         getShipDocument();
     })
 }
