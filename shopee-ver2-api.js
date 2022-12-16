@@ -68,7 +68,7 @@ const signature = (sign_format) => {
 
 const lastCreateTimeTo = () => {
     return new Promise((resolve,reject) => {
-        execute(`SELECT time_to FROM app_shopee_v2_api_history WHERE market="${syncData.market}" 
+        execute(`SELECT time_to FROM app_shopee_api_history WHERE market="${syncData.market}" 
             ORDER BY api_history_id DESC LIMIT 0,1`,
             (err,rows) => {
 
@@ -898,7 +898,7 @@ const databaseUpdateTracking = (trackingData) => {
 const timeSave = () => {
     return new Promise((resolve,reject) => {
         
-        execute(`INSERT INTO app_shopee_v2_api_history
+        execute(`INSERT INTO app_shopee_api_history
             (
                 market,
                 time_to,
