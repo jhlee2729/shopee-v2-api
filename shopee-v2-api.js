@@ -327,7 +327,7 @@ const updateOrderDetailsTake = () => {
 const getShipDocumentInfo = () => {
     return new Promise((resolve,reject) => {
         
-        let path = `/api/v2/logistics/get_shipping_document_info`
+        let path = `/api/v2/logistics/get_shipping_document_data_info`
         let timestamp = new Date().getTime();
         let convert = Number((timestamp.toString()).substr(0, 10));
         let sign_format = `${syncData.partner_id}${path}${convert}${syncData.access_token}${syncData.shop_id}`;
@@ -339,15 +339,16 @@ const getShipDocumentInfo = () => {
         const getShipDocument = () => {
 
             axios({
-                method : 'GET',
-                url : "https://partner.shopeemobile.com/api/v2/logistics/get_shipping_document_info",
+                method : 'POST',
+                url : "https://partner.shopeemobile.com/api/v2/logistics/get_shipping_document_data_info",
                 params : {
                     partner_id : syncData.partner_id,
                     timestamp : convert,
                     access_token : syncData.access_token,
                     shop_id : syncData.shop_id,
                     sign : sign,
-                    order_sn : insertData.updateOrder[loop].order_sn
+                    order_sn : insertData.updateOrder[loop].order_sn,
+                    recipient_address_info: [{ "key": "name" }]
                 }
             }).then((response) => {
 
