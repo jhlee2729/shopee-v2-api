@@ -1,5 +1,5 @@
 'use strict';
-/* v2 update - v1 table colum matching version */
+/* V2 UPDATE - V1 TABLE column matching Version */
 
 const config = require('../config');
 const env = require('./env').env;
@@ -478,62 +478,62 @@ const databaseInsert = (order,callback) => {
 
     const tomodel_order = {
         market: syncData.market,
-        order_sn: order.order_sn,
-        order_status: order.order_status,
-        actual_shipping_fee: order.actual_shipping_fee,
-        actual_shipping_fee_confirmed: order.actual_shipping_fee_confirmed,
-        buyer_cancel_reason: order.buyer_cancel_reason,
-        buyer_cpf_id: order.buyer_cpf_id,
-        buyer_user_id: Number(order.buyer_user_id),
-        buyer_username: order.buyer_username,
-        cancel_by: order.cancel_by,
-        cancel_reason: order.cancel_reason,
-        checkout_shipping_carrier: order.checkout_shipping_carrier,
-        cod : order.cod,
-        create_time: order.create_time,
-        update_time: order.update_time,
+        ordersn: order.order_sn,
+        country: order.region,
         currency: order.currency,
+        cod: (order.cod === true) ? 1 : 0,
         days_to_ship: Number(order.days_to_ship),
-        dropshipper: order.dropshipper,
-        dropshipper_phone: order.dropshipper_phone,
+        name: order.recipient_address?.name.replace(/"/g, '\\"'),
+        phone: order.recipient_address.phone,
+        town: order.recipient_address.town,
+        district: order.recipient_address.district,
+        city: order.recipient_address.city,
+        state: order.recipient_address.state,
+        recipient_country: order.recipient_address.region,
+        zipcode: order.recipient_address.zipcode,
+        full_address: order.recipient_address.full_address?.replace(/"/g, '\\"'),
         estimated_shipping_fee: Number(order.estimated_shipping_fee),
-        fulfillment_flag: order.fulfillment_flag,
-        goods_to_declare: order.goods_to_declare,
-        invoice_data: order.invoice_data,
+        actual_shipping_cost: order.actual_shipping_fee,
+        total_amount: Number(order.total_amount),
+        order_status: order.order_status,
+        shipping_carrier: order.shipping_carrier,
+        payment_method: order.payment_method,
+        goods_to_declare: (order.goods_to_declare === true) ? 1 : 0,
         message_to_seller: order.message_to_seller?.replace(/"/g, '\\"'),
         note: order.note?.replace(/"/g, '\\"'),
         note_update_time : order.note_update_time,
+        create_time: order.create_time,
+        update_time: order.update_time,
+        pay_time: Number(order.pay_time),
+        dropshipper: order.dropshipper,
+        buyer_username: order.buyer_username,
+        dropshipper_phone: order.dropshipper_phone,
+        ship_by_date: Number(order.ship_by_date),
+        is_split_up: (order.split_up === true) ? 1 : 0,
+        buyer_cancel_reason: order.buyer_cancel_reason,
+        cancel_by: order.cancel_by,
+        cancel_reason: order.cancel_reason,
+        is_actual_shipping_fee_confirmed: (order.actual_shipping_fee_confirmed === true) ? 1 : 0,
+        buyer_cpf_id: order.buyer_cpf_id,
+        buyer_user_id: Number(order.buyer_user_id),
+        checkout_shipping_carrier: order.checkout_shipping_carrier,
+        fulfillment_flag: order.fulfillment_flag,
+        invoice_data: order.invoice_data,
         order_chargeable_weight_gram: Number(order.order_chargeable_weight_gram),
         package_list_package_number: order.package_list[0].package_number,
         package_list_logistics_status: order.package_list[0].logistics_status,
         package_list_shipping_carrier: order.package_list[0].shipping_carrier,
-        pay_time: Number(order.pay_time),
-        payment_method: order.payment_method,
         pickup_done_time : Number(order.pickup_done_time),
         prescription_check_status: order.prescription_check_status,
         prescription_images: order.prescription_images,
-        recipient_address_name: order.recipient_address?.name.replace(/"/g, '\\"'),
-        recipient_address_phone: order.recipient_address.phone,
-        recipient_address_town: order.recipient_address.town,
-        recipient_address_district: order.recipient_address.district,
-        recipient_address_city: order.recipient_address.city,
-        recipient_address_state: order.recipient_address.state,
-        recipient_address_region: order.recipient_address.region,
-        recipient_address_zipcode: order.recipient_address.zipcode,
-        recipient_address_full_address: order.recipient_address.full_address?.replace(/"/g, '\\"'),
-        region: order.region,
         reverse_shipping_fee: Number(order.reverse_shipping_fee),
-        ship_by_date: Number(order.ship_by_date),
-        shipping_carrier: order.shipping_carrier,
-        split_up: order.split_up,
-        total_amount: Number(order.total_amount)
     }
 
-    execute(`INSERT IGNORE INTO app_shopee_v2_order SET ?`,
+    execute(`INSERT IGNORE INTO app_shopee_order SET ?`,
         (err,rows) => {
             if ( err ) {
                 error_hook(syncData.market,err,(e,res) => {
-                    console.log("databaseInsert app_shopee_v2_order 에러", err);
+                    console.log("databaseInsert app_shopee_order 에러", err);
                     throw err;
                 });
             } else {
@@ -546,33 +546,31 @@ const databaseInsert = (order,callback) => {
 
     const loopFn = () => {
 
-        let tomodel_items = {}
-
-        tomodel_items.order_sn = order.order_sn;
-        tomodel_items.market = syncData.market;
+        let tomodel_items = {};
+        tomodel_items.ordersn = order.order_sn;
         tomodel_items.item_id = items[loop].item_id;
         tomodel_items.item_name = items[loop].item_name.replace(/"/g, '\\"');
         tomodel_items.item_sku = items[loop].item_sku;
-        tomodel_items.model_id = items[loop].model_id;
-        tomodel_items.model_name = items[loop].model_name;
-        tomodel_items.model_sku = items[loop].model_sku;
-        tomodel_items.model_quantity_purchased = items[loop].model_quantity_purchased;
-        tomodel_items.model_original_price = Number(items[loop].model_original_price);
-        tomodel_items.model_discounted_price = Number(items[loop].model_discounted_price);
-        tomodel_items.wholesale = items[loop].wholesale;
+        tomodel_items.variation_id = items[loop].model_id;
+        tomodel_items.variation_name = items[loop].model_name;
+        tomodel_items.variation_sku = items[loop].model_sku;
+        tomodel_items.variation_quantity_purchased = items[loop].model_quantity_purchased;
+        tomodel_items.variation_original_price = Number(items[loop].model_original_price);
+        tomodel_items.variation_discounted_price = Number(items[loop].model_discounted_price);
+        tomodel_items.is_wholesale = (items[loop].wholesale === true) ? 1 : 0;
         tomodel_items.weight = Number(items[loop].weight);
-        tomodel_items.add_on_deal = items[loop].add_on_deal;
-        tomodel_items.main_item = items[loop].main_item;
+        tomodel_items.is_add_on_deal = items[loop].add_on_deal;
+        tomodel_items.is_main_item = (items[loop].main_item === true) ? 1 : 0;
         tomodel_items.add_on_deal_id = items[loop].add_on_deal_id;
         tomodel_items.promotion_type = items[loop].promotion_type;
         tomodel_items.promotion_id = items[loop].promotion_id;
         tomodel_items.image_info_image_url = items[loop].image_info.image_url;
 
-        execute(`INSERT IGNORE INTO app_shopee_v2_order_details SET ?`,
+        execute(`INSERT IGNORE INTO app_shopee_order_details SET ?`,
             (err,rows) => {
                 if ( err ) {
                     error_hook(syncData.market,err,(e,res) => {
-                        console.log("databaseInsert app_shopee_v2_order_details 에러", err);
+                        console.log("databaseInsert app_shopee_order_details 에러", err);
                         throw err;
                     });
                 } else {
@@ -608,96 +606,67 @@ const databaseReplace = (order,callback) => {
     }
 
     //order
-    execute(`INSERT INTO app_shopee_v2_order
+    execute(`INSERT INTO app_shopee_order
         (
             market,
-            order_sn,
-            order_status,
-            actual_shipping_fee,
-            actual_shipping_fee_confirmed,
-            buyer_cancel_reason,
-            buyer_cpf_id,
-            buyer_user_id,
-            buyer_username,
-            cancel_by,
-            cancel_reason,
-            checkout_shipping_carrier,
-            cod,
-            create_time,
-            update_time,
+            ordersn,
+            country,
             currency,
+            cod,
             days_to_ship,
-            dropshipper,
-            dropshipper_phone,
+            name,
+            phone,
+            town,
+            district,
+            city,
+            state,
+            recipient_country,
+            zipcode,
+            full_address,
             estimated_shipping_fee,
-            fulfillment_flag,
+            actual_shipping_cost,
+            total_amount,
+            order_status,
+            shipping_carrier,
+            payment_method,
             goods_to_declare,
-            invoice_data,
             message_to_seller,
             note,
-            note_update_time,
+            note_update_time ,
+            create_time,
+            update_time,
+            pay_time,
+            dropshipper,
+            buyer_username,
+            dropshipper_phone,
+            ship_by_date,
+            is_split_up,
+            buyer_cancel_reason,
+            cancel_by,
+            cancel_reason,
+            is_actual_shipping_fee_confirmed,
+            buyer_cpf_id,
+            buyer_user_id,
+            checkout_shipping_carrier,
+            fulfillment_flag,
+            invoice_data,
             order_chargeable_weight_gram,
             package_list_package_number,
             package_list_logistics_status,
             package_list_shipping_carrier,
-            pay_time,
-            payment_method,
-            pickup_done_time,
+            pickup_done_time ,
             prescription_check_status,
             prescription_images,
-            recipient_address_name,
-            recipient_address_phone,
-            recipient_address_town,
-            recipient_address_district,
-            recipient_address_city,
-            recipient_address_state,
-            recipient_address_region,
-            recipient_address_zipcode,
-            recipient_address_full_address,
-            region,
-            reverse_shipping_fee,
-            ship_by_date,
-            shipping_carrier,
-            split_up,
-            total_amount
+            reverse_shipping_fee
         )
         VALUES
         (
             "${syncData.market}",
             "${order.order_sn}",
-            "${order.order_status}",
-            "${order.actual_shipping_fee}",
-            "${order.actual_shipping_fee_confirmed}",
-            "${order.buyer_cancel_reason}",
-            "${order.buyer_cpf_id}",
-            ${Number(order.buyer_user_id)},
-            "${order.buyer_username}",
-            "${order.cancel_by}",
-            "${order.cancel_reason}",
-            "${order.checkout_shipping_carrier}",
-            "${order.cod}",
-            ${order.create_time},
-            ${order.update_time},
+            "${order.region}",
             "${order.currency}",
+            "${(order.cod === true) ? 1 : 0}",
             ${Number(order.days_to_ship)},
-            "${order.dropshipper}",
-            "${order.dropshipper_phone}",
-            ${Number(order.estimated_shipping_fee)},
-            "${order.fulfillment_flag}",
-            "${order.goods_to_declare}",
-            "${order.invoice_data}",
-            "${order.message_to_seller?.replace(/"/g, '\\"')}",
-            "${order.note?.replace(/"/g, '\\"')}",
-            ${order.note_update_time},
-            ${Number(order.order_chargeable_weight_gram)},
-            "${order.package_list[0].package_number}",
-            "${order.package_list[0].logistics_status}",
-            "${order.package_list[0].shipping_carrier}",
-            ${Number(order.pay_time)},
-            "${order.payment_method}",
-            ${Number(order.pickup_done_time)},
-            "${order.prescription_check_status}",
-            "${order.prescription_images}",
             "${order.recipient_address?.name.replace(/"/g, '\\"')}",
             "${order.recipient_address.phone}",
             "${order.recipient_address.town}",
@@ -707,69 +676,98 @@ const databaseReplace = (order,callback) => {
             "${order.recipient_address.region}",
             "${order.recipient_address.zipcode}",
             "${order.recipient_address.full_address?.replace(/"/g, '\\"')}",
-            "${order.region}",
-            ${Number(order.reverse_shipping_fee)},
-            ${Number(order.ship_by_date)},
+            ${Number(order.estimated_shipping_fee)},
+            "${order.actual_shipping_fee}",
+            ${Number(order.total_amount)},
+            "${order.order_status}",
             "${order.shipping_carrier}",
-            "${order.split_up}",
-            ${Number(order.total_amount)}
+            "${order.payment_method}",
+            "${(order.goods_to_declare === true) ? 1 : 0}",
+            "${order.message_to_seller?.replace(/"/g, '\\"')}",
+            "${order.note?.replace(/"/g, '\\"')}",
+            ${order.note_update_time},
+            ${order.create_time},
+            ${order.update_time},
+            ${Number(order.pay_time)},
+            "${order.dropshipper}",
+            "${order.buyer_username}",
+            "${order.dropshipper_phone}",
+            ${Number(order.ship_by_date)},
+            "${(order.split_up === true) ? 1 : 0}",
+            "${order.buyer_cancel_reason}",
+            "${order.cancel_by}",
+            "${order.cancel_reason}",
+            "${(order.actual_shipping_fee_confirmed === true) ? 1 : 0}",
+            "${order.buyer_cpf_id}",
+            ${Number(order.buyer_user_id)},
+            "${order.checkout_shipping_carrier}",
+            "${order.fulfillment_flag}",
+            "${order.invoice_data}",
+            ${Number(order.order_chargeable_weight_gram)},
+            "${order.package_list[0].package_number}",
+            "${order.package_list[0].logistics_status}",
+            "${order.package_list[0].shipping_carrier}",
+            ${Number(order.pickup_done_time)},
+            "${order.prescription_check_status}",
+            "${order.prescription_images}",
+            ${Number(order.reverse_shipping_fee)}
         )
         ON DUPLICATE KEY UPDATE
             market = "${syncData.market}",
-            order_sn = "${order.order_sn}",
-            order_status = "${order.order_status}",
-            actual_shipping_fee = "${order.actual_shipping_fee}",
-            actual_shipping_fee_confirmed = "${order.actual_shipping_fee_confirmed}",
-            buyer_cancel_reason = "${order.buyer_cancel_reason}",
-            buyer_cpf_id= "${order.buyer_cpf_id}",
-            buyer_user_id = ${Number(order.buyer_user_id)},
-            buyer_username = "${order.buyer_username}",
-            cancel_by = "${order.cancel_by}",
-            cancel_reason = "${order.cancel_reason}",
-            checkout_shipping_carrier = "${order.checkout_shipping_carrier}",
-            cod = "${order.cod}",
-            create_time = ${order.create_time},
-            update_time = ${order.update_time},
+            ordersn = "${order.order_sn}",
+            country = "${order.region}",
             currency = "${order.currency}",
+            cod = "${(order.cod === true) ? 1 : 0}",
             days_to_ship = ${Number(order.days_to_ship)},
-            dropshipper = "${order.dropshipper}",
-            dropshipper_phone= "${order.dropshipper_phone}",
-            estimated_shipping_fee= ${Number(order.estimated_shipping_fee)},
-            fulfillment_flag = "${order.fulfillment_flag}",
-            goods_to_declare = "${order.goods_to_declare}",
-            invoice_data = "${order.invoice_data}",
+            name = "${order.recipient_address?.name.replace(/"/g, '\\"')}",
+            phone = "${order.recipient_address.phone}",
+            town = "${order.recipient_address.town}",
+            district = "${order.recipient_address.district}",
+            city = "${order.recipient_address.city}",
+            state = "${order.recipient_address.state}",
+            recipient_country = "${order.recipient_address.region}",
+            zipcode = "${order.recipient_address.zipcode}",
+            full_address = "${order.recipient_address.full_address?.replace(/"/g, '\\"')}",
+            estimated_shipping_fee = ${Number(order.estimated_shipping_fee)},
+            actual_shipping_cost = "${order.actual_shipping_fee}",
+            total_amount = ${Number(order.total_amount)},
+            order_status = "${order.order_status}",
+            shipping_carrier = "${order.shipping_carrier}",
+            payment_method = "${order.payment_method}",
+            goods_to_declare = "${(order.goods_to_declare === true) ? 1 : 0}",
             message_to_seller = "${order.message_to_seller?.replace(/"/g, '\\"')}",
             note = "${order.note?.replace(/"/g, '\\"')}",
-            note_update_time = ${order.note_update_time},
+            note_update_time = ${ order.note_update_time},
+            create_time = ${order.create_time},
+            update_time = ${order.update_time},
+            pay_time = ${Number(order.pay_time)},
+            dropshipper = "${order.dropshipper}",
+            buyer_username = "${order.buyer_username}",
+            dropshipper_phone = "${order.dropshipper_phone}",
+            ship_by_date = ${Number(order.ship_by_date)},
+            is_split_up = "${(order.split_up === true) ? 1 : 0}",
+            buyer_cancel_reason = "${order.buyer_cancel_reason}",
+            cancel_by = "${order.cancel_by}",
+            cancel_reason = "${order.cancel_reason}",
+            is_actual_shipping_fee_confirmed = "${(order.actual_shipping_fee_confirmed === true) ? 1 : 0}",
+            buyer_cpf_id = "${order.buyer_cpf_id}",
+            buyer_user_id = ${Number(order.buyer_user_id)},
+            checkout_shipping_carrier = "${order.checkout_shipping_carrier}",
+            fulfillment_flag = "${order.fulfillment_flag}",
+            invoice_data = "${order.invoice_data}",
             order_chargeable_weight_gram = ${Number(order.order_chargeable_weight_gram)},
             package_list_package_number = "${order.package_list[0].package_number}",
             package_list_logistics_status = "${order.package_list[0].logistics_status}",
             package_list_shipping_carrier = "${order.package_list[0].shipping_carrier}",
-            pay_time = ${Number(order.pay_time)},
-            payment_method = "${order.payment_method}",
             pickup_done_time = ${Number(order.pickup_done_time)},
             prescription_check_status = "${order.prescription_check_status}",
             prescription_images = "${order.prescription_images}",
-            recipient_address_name = "${order.recipient_address?.name.replace(/"/g, '\\"')}",
-            recipient_address_phone = "${order.recipient_address.phone}",
-            recipient_address_town = "${order.recipient_address.town}",
-            recipient_address_district = "${order.recipient_address.district}",
-            recipient_address_city = "${order.recipient_address.city}",
-            recipient_address_state = "${order.recipient_address.state}",
-            recipient_address_region = "${order.recipient_address.region}",
-            recipient_address_zipcode = "${order.recipient_address.zipcode}",
-            recipient_address_full_address = "${order.recipient_address.full_address?.replace(/"/g, '\\"')}",
-            region = "${order.region}",
-            reverse_shipping_fee = ${Number(order.reverse_shipping_fee)},
-            ship_by_date = ${Number(order.ship_by_date)},
-            shipping_carrier = "${order.shipping_carrier}",
-            split_up = "${order.split_up}",
-            total_amount= ${Number(order.total_amount)}
+            reverse_shipping_fee = ${Number(order.reverse_shipping_fee)}
         `,
         (err,rows) => {
             if ( err ) {
                 error_hook(syncData.market,err,(e,res) => {
-                    console.log("databaseReplace app_shopee_v2_order 에러", err);
+                    console.log("databaseReplace app_shopee_order 에러", err);
                     throw err;
                 });
             } else {
@@ -781,23 +779,22 @@ const databaseReplace = (order,callback) => {
     let loop = 0;
 
     const loopFn = () => {
-        execute(`INSERT INTO app_shopee_v2_order_details 
+        execute(`INSERT INTO app_shopee_order_details 
             (
-                market,
-                order_sn,
+                ordersn,
                 item_id,
                 item_name,
                 item_sku,
-                model_id,
-                model_name,
-                model_sku,
-                model_quantity_purchased,
-                model_original_price,
-                model_discounted_price,
-                wholesale,
+                variation_id,
+                variation_name,
+                variation_sku,
+                variation_quantity_purchased,
+                variation_original_price,
+                variation_discounted_price,
+                is_wholesale,
                 weight,
-                add_on_deal,
-                main_item,
+                is_add_on_deal,
+                is_main_item,
                 add_on_deal_id,
                 promotion_type,
                 promotion_id,
@@ -805,7 +802,6 @@ const databaseReplace = (order,callback) => {
             )
             VALUES
             (
-                "${syncData.market}",
                 "${order.order_sn}",
                 ${items[loop].item_id},
                 "${items[loop].item_name.replace(/"/g, '\\"')}",
@@ -816,40 +812,39 @@ const databaseReplace = (order,callback) => {
                 "${items[loop].model_quantity_purchased}",
                 ${Number(items[loop].model_original_price)},
                 ${Number(items[loop].model_discounted_price)},
-                "${items[loop].wholesale}",
+                "${(items[loop].wholesale === true) ? 1 : 0}",
                 ${Number(items[loop].weight)},
                 ${items[loop].add_on_deal},
-                "${items[loop].main_item}",
+                "${(items[loop].main_item === true) ? 1 : 0}",
                 ${items[loop].add_on_deal_id},
                 "${items[loop].promotion_type}",
                 ${items[loop].promotion_id},
-                "${items[loop].image_info.image_ur}"
+                "${items[loop].image_info.image_url}"
             )
             ON DUPLICATE KEY UPDATE
-                market = "${syncData.market}",
-                order_sn = "${order.order_sn}",
+                ordersn = "${order.order_sn}",
                 item_id = ${items[loop].item_id},
                 item_name = "${items[loop].item_name.replace(/"/g, '\\"')}",
                 item_sku = "${items[loop].item_sku}",
-                model_id = ${items[loop].model_id},
-                model_name = "${items[loop].model_name}",
-                model_sku = "${items[loop].model_sku}",
-                model_quantity_purchased = "${items[loop].model_quantity_purchased}",
-                model_original_price = ${Number(items[loop].model_original_price)},
-                model_discounted_price = ${Number(items[loop].model_discounted_price)},
-                wholesale = "${items[loop].wholesale}",
+                variation_id = ${items[loop].model_id},
+                variation_name = "${items[loop].model_name}",
+                variation_sku = "${items[loop].model_sku}",
+                variation_quantity_purchased = "${items[loop].model_quantity_purchased}",
+                variation_original_price = ${Number(items[loop].model_original_price)},
+                variation_discounted_price = ${Number(items[loop].model_discounted_price)},
+                is_wholesale = "${(items[loop].wholesale === true) ? 1 : 0}",
                 weight = ${Number(items[loop].weight)},
-                add_on_deal = ${items[loop].add_on_deal},
-                main_item = "${items[loop].main_item}",
+                is_add_on_deal = ${items[loop].add_on_deal},
+                is_main_item = "${(items[loop].main_item === true) ? 1 : 0}",
                 add_on_deal_id = ${items[loop].add_on_deal_id},
                 promotion_type = "${items[loop].promotion_type}",
                 promotion_id = ${items[loop].promotion_id},
-                image_info_image_url = "${items[loop].image_info.image_ur}"
+                image_info_image_url = "${items[loop].image_info.image_url}"
             `,
             (err,rows) => {
                 if ( err ) {
                     error_hook(syncData.market,err,(e,res) => {
-                        console.log("databaseReplace app_shopee_v2_order_details 에러", err);
+                        console.log("databaseReplace app_shopee_order_details 에러", err);
                         throw err;
                     });
                 } else {
@@ -879,9 +874,9 @@ const databaseUpdateTracking = (trackingData) => {
         
         trackingData.forEach(i => { 
             console.log("updateData", i.order_sn, i.tracking_number, i.service_code);
-            execute(`UPDATE app_shopee_v2_order
-                        SET tracking_number="${i.tracking_number}", service_code ="${i.service_code}"
-                        WHERE order_sn = "${i.order_sn}";`,
+            execute(`UPDATE app_shopee_order
+                        SET tracking_no="${i.tracking_number}", service_code ="${i.service_code}"
+                        WHERE ordersn = "${i.order_sn}";`,
                 (err,rows) => {
                     if (err) {
                         error_hook(syncData.market,err,(e,res) => {
@@ -927,7 +922,7 @@ const timeSave = () => {
 const countSave = () => {
     return new Promise((resolve,reject) => {
         
-        execute(`INSERT INTO app_shopee_v2_count
+        execute(`INSERT INTO app_shopee_count
             (
                 market,
                 TOTAL,
@@ -942,27 +937,27 @@ const countSave = () => {
                 COMPLETED
             ) VALUES (
                 "${syncData.market}",
-                (SELECT COUNT(*) count FROM app_shopee_v2_order WHERE market="${syncData.market}"),
-                (SELECT COUNT(*) count FROM app_shopee_v2_order WHERE order_status="UNPAID" AND market="${syncData.market}"),
-                (SELECT COUNT(*) count FROM app_shopee_v2_order WHERE order_status="READY_TO_SHIP" AND market="${syncData.market}"),
-                (SELECT COUNT(*) count FROM app_shopee_v2_order WHERE order_status="RETRY_SHIP" AND market="${syncData.market}"),
-                (SELECT COUNT(*) count FROM app_shopee_v2_order WHERE order_status="SHIPPED" AND market="${syncData.market}"),
-                (SELECT COUNT(*) count FROM app_shopee_v2_order WHERE order_status="TO_CONFIRM_RECEIVE" AND market="${syncData.market}"),
-                (SELECT COUNT(*) count FROM app_shopee_v2_order WHERE order_status="IN_CANCEL" AND market="${syncData.market}"),
-                (SELECT COUNT(*) count FROM app_shopee_v2_order WHERE order_status="CANCELLED" AND market="${syncData.market}"),
-                (SELECT COUNT(*) count FROM app_shopee_v2_order WHERE order_status="TO_RETURN" AND market="${syncData.market}"),
-                (SELECT COUNT(*) count FROM app_shopee_v2_order WHERE order_status="COMPLETED" AND market="${syncData.market}")
+                (SELECT COUNT(*) count FROM app_shopee_order WHERE market="${syncData.market}"),
+                (SELECT COUNT(*) count FROM app_shopee_order WHERE order_status="UNPAID" AND market="${syncData.market}"),
+                (SELECT COUNT(*) count FROM app_shopee_order WHERE order_status="READY_TO_SHIP" AND market="${syncData.market}"),
+                (SELECT COUNT(*) count FROM app_shopee_order WHERE order_status="RETRY_SHIP" AND market="${syncData.market}"),
+                (SELECT COUNT(*) count FROM app_shopee_order WHERE order_status="SHIPPED" AND market="${syncData.market}"),
+                (SELECT COUNT(*) count FROM app_shopee_order WHERE order_status="TO_CONFIRM_RECEIVE" AND market="${syncData.market}"),
+                (SELECT COUNT(*) count FROM app_shopee_order WHERE order_status="IN_CANCEL" AND market="${syncData.market}"),
+                (SELECT COUNT(*) count FROM app_shopee_order WHERE order_status="CANCELLED" AND market="${syncData.market}"),
+                (SELECT COUNT(*) count FROM app_shopee_order WHERE order_status="TO_RETURN" AND market="${syncData.market}"),
+                (SELECT COUNT(*) count FROM app_shopee_order WHERE order_status="COMPLETED" AND market="${syncData.market}")
             ) ON DUPLICATE KEY UPDATE
-                TOTAL=(SELECT COUNT(*) count FROM app_shopee_v2_order WHERE market="${syncData.market}"),
-                UNPAID=(SELECT COUNT(*) count FROM app_shopee_v2_order WHERE order_status="UNPAID" AND market="${syncData.market}"),
-                READY_TO_SHIP=(SELECT COUNT(*) count FROM app_shopee_v2_order WHERE order_status="READY_TO_SHIP" AND market="${syncData.market}"),
-                RETRY_SHIP=(SELECT COUNT(*) count FROM app_shopee_v2_order WHERE order_status="RETRY_SHIP" AND market="${syncData.market}"),
-                SHIPPED=(SELECT COUNT(*) count FROM app_shopee_v2_order WHERE order_status="SHIPPED" AND market="${syncData.market}"),
-                TO_CONFIRM_RECEIVE=(SELECT COUNT(*) count FROM app_shopee_v2_order WHERE order_status="TO_CONFIRM_RECEIVE" AND market="${syncData.market}"),
-                IN_CANCEL=(SELECT COUNT(*) count FROM app_shopee_v2_order WHERE order_status="IN_CANCEL" AND market="${syncData.market}"),
-                CANCELLED=(SELECT COUNT(*) count FROM app_shopee_v2_order WHERE order_status="CANCELLED" AND market="${syncData.market}"),
-                TO_RETURN=(SELECT COUNT(*) count FROM app_shopee_v2_order WHERE order_status="TO_RETURN" AND market="${syncData.market}"),
-                COMPLETED=(SELECT COUNT(*) count FROM app_shopee_v2_order WHERE order_status="COMPLETED" AND market="${syncData.market}");`,
+                TOTAL=(SELECT COUNT(*) count FROM app_shopee_order WHERE market="${syncData.market}"),
+                UNPAID=(SELECT COUNT(*) count FROM app_shopee_order WHERE order_status="UNPAID" AND market="${syncData.market}"),
+                READY_TO_SHIP=(SELECT COUNT(*) count FROM app_shopee_order WHERE order_status="READY_TO_SHIP" AND market="${syncData.market}"),
+                RETRY_SHIP=(SELECT COUNT(*) count FROM app_shopee_order WHERE order_status="RETRY_SHIP" AND market="${syncData.market}"),
+                SHIPPED=(SELECT COUNT(*) count FROM app_shopee_order WHERE order_status="SHIPPED" AND market="${syncData.market}"),
+                TO_CONFIRM_RECEIVE=(SELECT COUNT(*) count FROM app_shopee_order WHERE order_status="TO_CONFIRM_RECEIVE" AND market="${syncData.market}"),
+                IN_CANCEL=(SELECT COUNT(*) count FROM app_shopee_order WHERE order_status="IN_CANCEL" AND market="${syncData.market}"),
+                CANCELLED=(SELECT COUNT(*) count FROM app_shopee_order WHERE order_status="CANCELLED" AND market="${syncData.market}"),
+                TO_RETURN=(SELECT COUNT(*) count FROM app_shopee_order WHERE order_status="TO_RETURN" AND market="${syncData.market}"),
+                COMPLETED=(SELECT COUNT(*) count FROM app_shopee_order WHERE order_status="COMPLETED" AND market="${syncData.market}");`,
             (err,rows) => {
                 if ( err ) {
                     error_hook(syncData.market,err,(e,res) => {
