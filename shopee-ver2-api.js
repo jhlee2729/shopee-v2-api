@@ -1,5 +1,5 @@
 'use strict';
-/* V2 UPDATE - V1 TABLE column matching Version */
+/* Shopee Order API : V2.0 UPDATE - V1.0 TABLE column matching Version */
 
 const config = require('../config');
 const env = require('./env').env;
