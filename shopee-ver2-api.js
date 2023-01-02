@@ -446,7 +446,7 @@ const updateOrderDetailsBundle = () => {
                             && items[i].model_id == bundle[k].model_id
                             && items[i].add_on_deal_id == bundle[k].add_on_deal_id
                             && items[i].promotion_id == bundle[k].promotion_id ) {
-                            bundle[k].variation_quantity_purchased = Number(bundle[k].variation_quantity_purchased) + Number(items[i].variation_quantity_purchased);
+                            bundle[k].model_quantity_purchased = Number(bundle[k].model_quantity_purchased) + Number(items[i].model_quantity_purchased);
                             check = false;
                         }
                     }
