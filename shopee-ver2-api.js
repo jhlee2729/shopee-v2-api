@@ -51,6 +51,11 @@ const execute = (sql,callback,data = {}) => {
     });
 }
 
+const remove_emoji = function(text){
+        
+    return text.replace(/[\{\}\[\]\/?.,;:|\)*~`!^\-_+<>@\$&\\\=\(\'\"]|[\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF]/gi, '');
+}
+
 const closing = () => {
     pool.end();
 }
@@ -352,11 +357,10 @@ const getShipDocumentInfo = () => {
                     recipient_address_info: [{ "key": "name" }]
                 }
             }).then((response) => {
-
+                
                 if ( response.data.response !== undefined) {
                     insertData.updateShippingDocument = insertData.updateShippingDocument.concat({'order_sn': insertData.updateOrder[loop].order_sn, 'tracking_number': response.data.response.shipping_document_info.tracking_number, 'service_code': response.data.response.shipping_document_info.service_code})
                 }
-                
                 loop++;
                 callAPI();
 
@@ -499,7 +503,7 @@ const databaseInsert = (order,callback) => {
         shipping_carrier: order.shipping_carrier,
         payment_method: order.payment_method,
         goods_to_declare: (order.goods_to_declare === true) ? 1 : 0,
-        message_to_seller: order.message_to_seller?.replace(/"/g, '\\"'),
+        message_to_seller: remove_emoji(order.message_to_seller)?.replace(/"/g, '\\"'),
         note: order.note?.replace(/"/g, '\\"'),
         note_update_time : order.note_update_time,
         create_time: order.create_time,
@@ -683,7 +687,7 @@ const databaseReplace = (order,callback) => {
             "${order.shipping_carrier}",
             "${order.payment_method}",
             "${(order.goods_to_declare === true) ? 1 : 0}",
-            "${order.message_to_seller?.replace(/"/g, '\\"')}",
+            "${remove_emoji(order.message_to_seller)?.replace(/"/g, '\\"')}",
             "${order.note?.replace(/"/g, '\\"')}",
             ${order.note_update_time},
             ${order.create_time},
@@ -735,7 +739,7 @@ const databaseReplace = (order,callback) => {
             shipping_carrier = "${order.shipping_carrier}",
             payment_method = "${order.payment_method}",
             goods_to_declare = "${(order.goods_to_declare === true) ? 1 : 0}",
-            message_to_seller = "${order.message_to_seller?.replace(/"/g, '\\"')}",
+            message_to_seller = "${remove_emoji(order.message_to_seller)?.replace(/"/g, '\\"')}",
             note = "${order.note?.replace(/"/g, '\\"')}",
             note_update_time = ${ order.note_update_time},
             create_time = ${order.create_time},
@@ -1060,7 +1064,9 @@ const worker = async(sync,callback,bool) => {
         // 트래킹정보 업데이트
         if (u_count != 0 ) {
             let trackingData = await getShipDocumentInfo();
-            await databaseUpdateTracking(trackingData);
+            if ( trackingData !== false ) {
+                await databaseUpdateTracking(trackingData);
+            }
         }
 
         await timeSave();
