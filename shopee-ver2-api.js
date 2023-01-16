@@ -565,9 +565,9 @@ const databaseInsert = (order,callback) => {
         tomodel_items.weight = Number(items[loop].weight);
         tomodel_items.is_add_on_deal = items[loop].add_on_deal;
         tomodel_items.is_main_item = (items[loop].main_item === true) ? 1 : 0;
-        tomodel_items.add_on_deal_id = items[loop].add_on_deal_id;
+        tomodel_items.add_on_deal_id = items[loop].add_on_deal_id === null ? 0 : Number(items[loop].add_on_deal_id);
         tomodel_items.promotion_type = items[loop].promotion_type;
-        tomodel_items.promotion_id = items[loop].promotion_id;
+        tomodel_items.promotion_id = items[loop].promotion_id === null ? 0 : Number(items[loop].promotion_id);
         tomodel_items.image_info_image_url = items[loop].image_info.image_url;
 
         execute(`INSERT IGNORE INTO app_shopee_order_details SET ?`,
@@ -820,9 +820,9 @@ const databaseReplace = (order,callback) => {
                 ${Number(items[loop].weight)},
                 ${items[loop].add_on_deal},
                 "${(items[loop].main_item === true) ? 1 : 0}",
-                ${items[loop].add_on_deal_id},
+                ${items[loop].add_on_deal_id === null ? 0 : Number(items[loop].add_on_deal_id)},
                 "${items[loop].promotion_type}",
-                ${items[loop].promotion_id},
+                ${items[loop].promotion_id === null ? 0 : Number(items[loop].promotion_id)},
                 "${items[loop].image_info.image_url}"
             )
             ON DUPLICATE KEY UPDATE
@@ -840,9 +840,9 @@ const databaseReplace = (order,callback) => {
                 weight = ${Number(items[loop].weight)},
                 is_add_on_deal = ${items[loop].add_on_deal},
                 is_main_item = "${(items[loop].main_item === true) ? 1 : 0}",
-                add_on_deal_id = ${items[loop].add_on_deal_id},
+                add_on_deal_id = ${items[loop].add_on_deal_id === null ? 0 : Number(items[loop].add_on_deal_id)},
                 promotion_type = "${items[loop].promotion_type}",
-                promotion_id = ${items[loop].promotion_id},
+                promotion_id = ${items[loop].promotion_id === null ? 0 : Number(items[loop].promotion_id)},
                 image_info_image_url = "${items[loop].image_info.image_url}"
             `,
             (err,rows) => {
@@ -1079,4 +1079,3 @@ const worker = async(sync,callback,bool) => {
 }
 
 module.exports = worker;
-
