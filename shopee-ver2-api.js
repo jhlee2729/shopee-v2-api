@@ -560,7 +560,7 @@ const databaseInsert = (order,callback) => {
         tomodel_items.variation_sku = items[loop].model_sku;
         tomodel_items.variation_quantity_purchased = items[loop].model_quantity_purchased;
         tomodel_items.variation_original_price = Number(items[loop].model_original_price);
-        tomodel_items.variation_discounted_price = items[loop].model_discounted_price === undefined ? 'NULL' : Number(items[loop].model_discounted_price);
+        tomodel_items.variation_discounted_price = items[loop].model_discounted_price === undefined ? 0 : Number(items[loop].model_discounted_price);
         tomodel_items.is_wholesale = (items[loop].wholesale === true) ? 1 : 0;
         tomodel_items.weight = Number(items[loop].weight);
         tomodel_items.is_add_on_deal = items[loop].add_on_deal;
@@ -815,7 +815,7 @@ const databaseReplace = (order,callback) => {
                 "${items[loop].model_sku}",
                 "${items[loop].model_quantity_purchased}",
                 ${Number(items[loop].model_original_price)},
-                ${items[loop].model_discounted_price === undefined ? 'NULL' : Number(items[loop].model_discounted_price)},
+                ${items[loop].model_discounted_price === undefined ? 0 : Number(items[loop].model_discounted_price)},
                 "${(items[loop].wholesale === true) ? 1 : 0}",
                 ${Number(items[loop].weight)},
                 ${items[loop].add_on_deal},
@@ -835,7 +835,7 @@ const databaseReplace = (order,callback) => {
                 variation_sku = "${items[loop].model_sku}",
                 variation_quantity_purchased = "${items[loop].model_quantity_purchased}",
                 variation_original_price = ${Number(items[loop].model_original_price)},
-                variation_discounted_price = ${items[loop].model_discounted_price === undefined ? 'NULL' : Number(items[loop].model_discounted_price)},
+                variation_discounted_price = ${items[loop].model_discounted_price === undefined ? 0 : Number(items[loop].model_discounted_price)},
                 is_wholesale = "${(items[loop].wholesale === true) ? 1 : 0}",
                 weight = ${Number(items[loop].weight)},
                 is_add_on_deal = ${items[loop].add_on_deal},
@@ -1079,3 +1079,4 @@ const worker = async(sync,callback,bool) => {
 }
 
 module.exports = worker;
+
