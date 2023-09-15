@@ -21,21 +21,21 @@ const refreshAccesstoken = () => {
     const sign = crypto.createHmac('sha256', key).update(stringformat).digest('hex').toLowerCase();
 
     return axios({
-            method : 'POST',
-            url : `${host}${path}?partner_id=${partner_id}&timestamp=${convert}&sign=${sign}`,
-            headers : {
-                "Content-Type" : "application/json"
-            },
-            data : {
-                refresh_token : refresh_token,
-                partner_id: partner_id,
-                merchant_id : merchant_id,
-            }
-        })
-        .then((res)=>{
+        method: 'POST',
+        url: `${host}${path}?partner_id=${partner_id}&timestamp=${convert}&sign=${sign}`,
+        headers: {
+            "Content-Type": "application/json"
+        },
+        data: {
+            refresh_token: refresh_token,
+            partner_id: partner_id,
+            shop_id: 224831920,
+        }
+    })
+        .then((res) => {
             console.log(res.data)
         })
-        .catch((err)=>{
+        .catch((err) => {
             console.log(err);
         })
 }
