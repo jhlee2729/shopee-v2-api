@@ -5,7 +5,7 @@ const signature = () => {
 
     const host = 'https://partner.shopeemobile.com';
     const path = '/api/v2/shop/auth_partner';
-    const redirect = 'https://www.naver.com/';
+    const redirect = 'https://www.daum.net/';
 
     const partner_id = Number(process.env.PARTNER_ID);
     const key = process.env.KEY;
